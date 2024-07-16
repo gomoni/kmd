@@ -2,19 +2,27 @@ package server
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gomoni/kmd/internal/ocr"
 )
 
-type OCR struct {
-	maxMemory int64
+type PDFRenderer interface {
+	Render(tmout time.Duration, r io.ReadSeeker, size int64, w io.Writer) (err error)
 }
 
-func NewOCR(maxMemory int64) OCR {
+type OCR struct {
+	maxMemory int64
+	renderer  PDFRenderer
+}
+
+func NewOCR(maxMemory int64, renderer PDFRenderer) OCR {
 	return OCR{
 		maxMemory: maxMemory,
+		renderer:  renderer,
 	}
 }
 
@@ -34,7 +42,9 @@ func (o OCR) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	client := ocr.NewClient()
 	defer client.Close()
 
-	err = client.ImageReader(upload)
+	sc := ocr.NewSmartClient(client, o.renderer)
+
+	err = sc.ImageReader(upload)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

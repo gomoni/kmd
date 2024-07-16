@@ -1,9 +1,9 @@
-package main
+package render
 
 import (
+	"fmt"
 	"image/png"
-	"log"
-	"os"
+	"io"
 	"time"
 
 	"github.com/klippa-app/go-pdfium"
@@ -11,59 +11,59 @@ import (
 	"github.com/klippa-app/go-pdfium/webassembly"
 )
 
-// Be sure to close pools/instances when you're done with them.
-var pool pdfium.Pool
+type Pool struct {
+	pool pdfium.Pool
+}
 
-func init() {
-	// Init the PDFium library and return the instance to open documents.
-	// You can tweak these configs to your need. Be aware that workers can use quite some memory.
-	var err error
-	pool, err = webassembly.Init(webassembly.Config{
+func NewPool() (Pool, error) {
+	pool, err := webassembly.Init(webassembly.Config{
 		MinIdle:  1, // Makes sure that at least x workers are always available
 		MaxIdle:  1, // Makes sure that at most x workers are ever available
 		MaxTotal: 1, // Maxium amount of workers in total, allows the amount of workers to grow when needed, items between total max and idle max are automatically cleaned up, while idle workers are kept alive so they can be used directly.
 	})
 	if err != nil {
-		log.Fatal(err)
+		return Pool{}, fmt.Errorf("initializing web assembly pool: %w", err)
 	}
+	return Pool{pool: pool}, nil
 }
 
-func main() {
-	const input = `testdata/test.pdf`
-	err := maine(input, "test.png")
-	if err != nil {
-		log.Fatal(err)
-	}
+func (p Pool) Close() error {
+	return p.pool.Close()
 }
 
-func maine(input, output string) error {
-	instance, err := pool.GetInstance(time.Second * 30)
+// Render renders first page from the pdf document as a png stream
+func (p Pool) Render(tmout time.Duration, r io.ReadSeeker, size int64, w io.Writer) (err error) {
+	instance, err := p.pool.GetInstance(tmout)
 	if err != nil {
-		return err
+		return fmt.Errorf("getting instance from pool: %w", err)
 	}
 	defer instance.Close()
 
-	doc, err := instance.OpenDocument(&requests.OpenDocument{FilePath: &input})
+	doc, err := instance.OpenDocument(&requests.OpenDocument{
+		FileReader:     r,
+		FileReaderSize: size,
+	})
 	if err != nil {
-		return err
+		return fmt.Errorf("opening document: %w", err)
 	}
 	// Always close the document, this will release its resources.
-	defer instance.FPDF_CloseDocument(&requests.FPDF_CloseDocument{
-		Document: doc.Document,
-	})
+	defer func() {
+		_, err = instance.FPDF_CloseDocument(&requests.FPDF_CloseDocument{
+			Document: doc.Document,
+		})
+	}()
 
-	// Render the page in DPI 200.
 	pageRender, err := instance.RenderPageInDPI(&requests.RenderPageInDPI{
-		DPI: 200, // The DPI to render the page in.
+		DPI: 200,
 		Page: requests.Page{
 			ByIndex: &requests.PageByIndex{
 				Document: doc.Document,
 				Index:    0,
 			},
-		}, // The page to render, 0-indexed.
+		},
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("rendering page in 200 DPI: %w", err)
 	}
 
 	// The Render* methods return a cleanup function that has to be called when
@@ -71,16 +71,9 @@ func maine(input, output string) error {
 	// you are done with the returned image object.
 	defer pageRender.Cleanup()
 
-	// Write the output to a file.
-	f, err := os.Create(output)
+	err = png.Encode(w, pageRender.Result.Image)
 	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	err = png.Encode(f, pageRender.Result.Image)
-	if err != nil {
-		return err
+		return fmt.Errorf("encoding png: %w", err)
 	}
 
 	return nil

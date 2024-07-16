@@ -6,26 +6,20 @@ HTTP/CLI interface for `tesseract-ocr` written in Go.
 
 ## Architecture
 
-Client/server - server has a Tesseracr-OCR and everything else installed, while
-client is a simple static binary which talks to server. Curl would be enough
-too.
+Client/server.
 
- * `kmd` - waits on systemd socket activation fd or opens a unix socket at
-   `/run/user/1000/kmd.sock` and listens there
- * `kmc` - CLI part of a `kmd`
+ * A client `kmc` is a simple static binary which talks to server. Curl would be
+   enough too.
+ * Server `kmd` is an HTTP server listening on unix socket `/run/user/1000/kmd.sock`. It uses
+   https://github.com/klippa-app/go-pdfium?tab=readme-ov-file#webassembly to
+   render pdf as png and gotesseract for the final OCR. It has a native dependencies
+   on a tesseract-ocr, so is expected to run inside Docker.
 
 ## TODO
 
  1. finish the refactoring of stuff to internal - mainly params
- 2. move cmd/render to kmd/kmc
  3. more tests
 
- * test https://github.com/klippa-app/go-pdfium
-    especially https://github.com/klippa-app/go-pdfium?tab=readme-ov-file#webassembly
- * convert pdf to png
-  + poppler-utils: pdftoppm input.pdf outputname -png
-  + image-magic: convert -density 150 input.pdf[666] -quality 90 output.png
-  + ghostscript?
  * tests
  * openSUSE package for mage
  * Dockerfile + public docker imaaazzz + GHA updating the shit
@@ -67,12 +61,10 @@ languages:
 
 # Why OCR?
 
-> I've said this before and I'll say it again: PDF sucks!
+> I've said this before and I'll say it again: PDF sucks
+> Rajesh Koothrappali, Ph.D.
 
-Not there're tons of Go libraries for PDF anyway. And I am not crazy enough to
-build it using anything else
-
-Library from Russ Cox: https://pkg.go.dev/rsc.io/pdf parses the testing PDF as
+Library from Russ Cox: https://pkg.go.dev/rsc.io/pdf parses one of the testing PDF as
 
 ```txt
 {Font:Arial CE FontSize:9.168 X:146.04 Y:663.5 W:0 S:2} {Font:Arial CE
@@ -81,7 +73,7 @@ X:146.076672 Y:663.5 W:0 S:^C} {Font:Arial CE FontSiz e:9.168 X:146.076672
 Y:663.5 W:0 S:^@} {Font:Arial CE FontSize:9.168 X:146.076672 Y:663.5 W:0 S:^W} 
 ```
 
-Great github.com/pdfcpu/pdfcpu
+And an amazing github.com/pdfcpu/pdfcpu
 
 ```
 BT
@@ -94,6 +86,6 @@ BT
 [<00290044004E>-3<0057>-4<005800550044000300FE0011>] TJ
 ```
 
-Commercial offering, haven't tried
+Commercial offerings exists, haven't tried
 https://unidoc.io/post/pdf-text-extraction-in-golang-with-unipdf/
 https://docs.apryse.com/documentation/go/guides/features/extraction/text-extract/
