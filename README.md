@@ -12,26 +12,8 @@ Client/server.
    enough too.
  * Server `kmd` is an HTTP server listening on unix socket `/run/user/1000/kmd.sock`. It uses
    https://github.com/klippa-app/go-pdfium?tab=readme-ov-file#webassembly to
-   render pdf as png and gotesseract for the final OCR. It has a native dependencies
-   on a tesseract-ocr, so is expected to run inside Docker.
-
-## TODO
-
- 1. finish the refactoring of stuff to internal - mainly params
- 3. more tests
-
- * tests
- * openSUSE package for mage
- * Dockerfile + public docker imaaazzz + GHA updating the shit
- * install a systemctl file(s)
- * do not hardcode unix path + make it configurable
- * HTTP/Accept for server - implement text/plain and application/json at least
- * errors reporting - maybe terrasect can't report errors other way than printing it?
-
-```
-Error in pixReadStream: Pdf reading is not supported
-Leptonica Error in pixRead: pix not read: /tmp/orcserver1026615170
-```
+   render pdf as png and `gotesseract` for the final OCR. It has a native dependencies
+   on a `tesseract-ocr`, so is expected to run inside Docker.
 
 # Usage
 
@@ -65,6 +47,24 @@ languages:
  * eng
 
 $ kmc ocr internal/testdata/hello.png
+Hello, world!
+```
+
+## TODO
+
+ 1. finish the refactoring of stuff to internal - mainly params
+ 3. more tests
+
+ * tests
+ * Dockerfile + public docker imaaazzz + GHA updating the stuff
+ * install a systemctl file(s)
+ * do not hardcode unix path + make it configurable
+ * HTTP/Accept for server - implement text/plain and application/json at least
+ * errors reporting - maybe terrasect can't report errors other way than printing it?
+
+```
+Error in pixReadStream: Pdf reading is not supported
+Leptonica Error in pixRead: pix not read: /tmp/orcserver1026615170
 ```
 
 # Why OCR?
