@@ -54,7 +54,18 @@ languages:
 
 ## Client
 
-TODO
+```sh
+# build
+$ mage build
+
+$ kmc info
+version: 5.4.1
+languages:
+ * ces
+ * eng
+
+$ kmc ocr internal/testdata/hello.png
+```
 
 # Why OCR?
 

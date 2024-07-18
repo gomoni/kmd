@@ -33,10 +33,26 @@ func (r *InfoCmd) Run(g Globals) error {
 	return g.client.Info(g.ctx, os.Stdout)
 }
 
+type OCRCmd struct {
+	File string `arg:"" required:"" help:"file to process"`
+}
+
+func (r *OCRCmd) Run(g Globals) error {
+	g.Debug("Running OCR", "file", r.File)
+	f, err := os.Open(r.File)
+	if err != nil {
+		return fmt.Errorf("os.Open(%s): %w", r.File, err)
+	}
+	defer f.Close()
+
+	return g.client.OCR(g.ctx, os.Stdout, f)
+}
+
 type CLI struct {
 	Debug bool `help:"Enable debug mode."`
 
 	Info InfoCmd `cmd:"" help:"show the server information"`
+	OCR  OCRCmd  `cmd:"" help:"extract the text from the input image or pdf file"`
 }
 
 func maine() error {

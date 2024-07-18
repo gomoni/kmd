@@ -64,8 +64,7 @@ func (o OCR) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	out, err := client.Text()
 	if err != nil {
-		// TODO: bad request error?
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 		return
 	}
 

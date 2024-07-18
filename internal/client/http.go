@@ -39,7 +39,7 @@ func (c HTTP) WithHTTPClient(client *http.Client) HTTP {
 	return ret
 }
 
-func (c HTTP) OCR(ctx context.Context, w io.Writer, r io.Reader /*, params OCRParams*/) error {
+func (c HTTP) OCR(ctx context.Context, w io.Writer, r io.Reader) error {
 	if r == nil {
 		return fmt.Errorf("input is empty")
 	}
@@ -50,9 +50,10 @@ func (c HTTP) OCR(ctx context.Context, w io.Writer, r io.Reader /*, params OCRPa
 	if err != nil {
 		return fmt.Errorf("create form file: %w", err)
 	}
-	_, err = io.Copy(fw, r)
+	var buf [4096]byte
+	_, err = io.CopyBuffer(fw, r, buf[:])
 	if err != nil {
-		return fmt.Errorf("read into the file: %w", err)
+		return fmt.Errorf("read from the file: %w", err)
 	}
 	// TODO: implement the support for OCR params
 	/*
