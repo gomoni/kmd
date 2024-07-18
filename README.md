@@ -1,3 +1,5 @@
+[![CI](https://github.com/gomoni/kmd/actions/workflows/go.yml/badge.svg)](https://github.com/gomoni/kmd/actions/workflows/go.yml)
+
 # Kmd
 
 > Karol Michal Daemon
@@ -58,7 +60,7 @@ Hello, world!
  * tests
  * Dockerfile + public docker imaaazzz + GHA updating the stuff
  * install a systemctl file(s)
- * do not hardcode unix path + make it configurable
+ * make unix path configurable
  * HTTP/Accept for server - implement text/plain and application/json at least
  * errors reporting - maybe terrasect can't report errors other way than printing it?
 
