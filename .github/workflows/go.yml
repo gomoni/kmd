@@ -16,10 +16,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install libtesseract-dev and libleptonica-dev
+    - name: Install tesseract-ocr and a dependencies
       uses: awalsh128/cache-apt-pkgs-action@latest
       with:
-        packages: libtesseract-dev libleptonica-dev
+        packages: libtesseract-dev tesseract-ocr-eng libleptonica-dev
         version: 1.0
 
     - name: Set up Go
