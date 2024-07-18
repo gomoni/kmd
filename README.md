@@ -35,29 +35,26 @@ Leptonica Error in pixRead: pix not read: /tmp/orcserver1026615170
 
 # Usage
 
+## Server
+
 ```sh
 # build
-mage build
-# or manually
-go build github.com/gomoni/kmd/cmd/kmd
-go build github.com/gomoni/kmd/cmd/kmc
+$ mage build
 
 # run server via systemd socket activation
 # will be handier once Docker files will be ready
-systemd-socket-activate -l /run/user/1000/kmd.sock ./kmd
+$ systemd-socket-activate -l ${XDG_RUNTIME_DIR:-/run/user/`id`}/kmd.sock ./kmd
 
-# or directly
-./kmdd
-
-# run client
-./kmc
-version: 5.4.0
+$ curl --unix-socket /run/user/1000/kmd.sock http://localhost/
+version: 5.4.1
 languages:
  * ces
  * eng
-# run ocr
-./kmc ocr internal/ocr/testdata/hello.png
 ```
+
+## Client
+
+TODO
 
 # Why OCR?
 

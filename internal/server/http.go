@@ -72,3 +72,19 @@ func (o OCR) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	fmt.Fprint(w, out)
 }
+
+func Info(w http.ResponseWriter, r *http.Request) {
+	info, err := ocr.Info()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// TODO: application/json response too
+	w.Header().Set("Content-Type", "text/plain")
+	fmt.Fprintf(w, "version: %s\n", info.Version)
+	fmt.Fprintf(w, "languages:\n")
+	for _, l := range info.Languages {
+		fmt.Fprintf(w, " * %s\n", l)
+	}
+}

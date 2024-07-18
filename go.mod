@@ -3,6 +3,7 @@ module github.com/gomoni/kmd
 go 1.22.4
 
 require (
+	github.com/alecthomas/kong v0.9.0
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/klippa-app/go-pdfium v1.12.2
 	github.com/magefile/mage v1.15.0

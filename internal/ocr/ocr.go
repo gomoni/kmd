@@ -124,3 +124,19 @@ func IsPDF(r io.ReadSeeker) (isPDF bool, err error) {
 	}
 	return true, nil
 }
+
+type InfoResponse struct {
+	Version   string
+	Languages []string
+}
+
+func Info() (InfoResponse, error) {
+	languages, err := ocr.GetAvailableLanguages()
+	if err != nil {
+		return InfoResponse{}, err
+	}
+	return InfoResponse{
+		Version:   ocr.Version(),
+		Languages: languages,
+	}, nil
+}
