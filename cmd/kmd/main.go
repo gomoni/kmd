@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/coreos/go-systemd/activation"
+	kos "github.com/gomoni/kmd/internal/os"
 	"github.com/gomoni/kmd/internal/render"
 	"github.com/gomoni/kmd/internal/server"
 )
 
 const (
-	kmd_host  = "/run/user/1000/kmd.sock"
 	maxMemory = 32 << 20 // a limit on uploaded file size
 )
 
@@ -24,6 +24,8 @@ func main() {
 		log.Fatalf("NewPool err: %s", err)
 	}
 	defer pool.Close()
+
+	sock := kos.DefaultSocketPath()
 
 	ocr := server.NewOCR(maxMemory, pool)
 	mux := http.NewServeMux()
@@ -41,12 +43,12 @@ func main() {
 		}
 		listener = listeners[0]
 	} else {
-		l, err := net.Listen("unix", kmd_host)
+		l, err := net.Listen("unix", sock)
 		if err != nil {
 			log.Fatal(err)
 		}
 		listener = l
-		defer os.Remove(kmd_host)
+		defer os.Remove(sock)
 	}
 
 	s := &http.Server{
