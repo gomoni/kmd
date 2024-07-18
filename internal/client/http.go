@@ -88,6 +88,14 @@ func (c HTTP) OCR(ctx context.Context, w io.Writer, r io.Reader /*, params OCRPa
 	return c.do(w, req)
 }
 
+func (c HTTP) Info(ctx context.Context, w io.Writer) error {
+	req, err := getPlain(ctx, c.prefix+"/")
+	if err != nil {
+		return err
+	}
+	return c.do(w, req)
+}
+
 func (c HTTP) do(w io.Writer, r *http.Request) error {
 	resp, err := c.client.Do(r)
 	if err != nil {
@@ -115,6 +123,20 @@ func postPlain(ctx context.Context, url string, body io.Reader) (*http.Request, 
 		http.MethodPost,
 		url,
 		body,
+	)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	req.Header.Set("content-type", "text/plain")
+	return req, nil
+}
+
+func getPlain(ctx context.Context, url string) (*http.Request, error) {
+	req, err := http.NewRequest(
+		http.MethodGet,
+		url,
+		nil,
 	)
 	if err != nil {
 		return nil, err
