@@ -16,6 +16,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install libtesseract-dev and libleptonica-dev
+      uses: awalsh128/cache-apt-pkgs-action@latest
+      with:
+        packages: libtesseract-dev libleptonica-dev
+        version: 1.0
+
     - name: Set up Go
       uses: actions/setup-go@v5
       with:

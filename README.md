@@ -13,7 +13,7 @@ Client/server.
  * Server `kmd` is an HTTP server listening on unix socket `/run/user/1000/kmd.sock`. It uses
    https://github.com/klippa-app/go-pdfium?tab=readme-ov-file#webassembly to
    render pdf as png and `gotesseract` for the final OCR. It has a native dependencies
-   on a `tesseract-ocr`, so is expected to run inside Docker.
+   on a `tesseract-ocr`, so is expected to run inside Docker container.
 
 # Usage
 
