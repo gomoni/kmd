@@ -49,18 +49,11 @@ func (o OCR) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// argument handling
 	if langs := r.FormValue("languages"); langs != "" {
 		client.Languages(strings.Split(langs, ","))
 	}
-	/*
-		if whitelist := r.FormValue("whitelist"); whitelist != "" {
-			err = client.SetWhitelist(whitelist)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-		}
-	*/
 
 	out, err := client.Text()
 	if err != nil {

@@ -53,14 +53,12 @@ Hello, world!
 ```
 
 ## TODO
-
- 1. finish the refactoring of stuff to internal - mainly params
- 3. more tests
+ 
+ 1. make unix path configurable
 
  * tests
  * Dockerfile + public docker imaaazzz + GHA updating the stuff
  * install a systemctl file(s)
- * make unix path configurable
  * HTTP/Accept for server - implement text/plain and application/json at least
  * errors reporting - maybe terrasect can't report errors other way than printing it?
 

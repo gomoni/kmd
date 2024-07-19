@@ -14,8 +14,10 @@ import (
 )
 
 type Globals struct {
+	// params
 	verbose bool
 
+	// other global stuff
 	client client.HTTP
 	ctx    context.Context
 }
@@ -34,24 +36,29 @@ func (r *InfoCmd) Run(g Globals) error {
 }
 
 type OCRCmd struct {
-	File string `arg:"" required:"" help:"file to process"`
+	Languages []string `optional:"" short:"l" help:"languages to use for OCR (default to eng(lish))"`
+	File      string   `arg:"" required:"" help:"file to process"`
 }
 
 func (r *OCRCmd) Run(g Globals) error {
-	g.Debug("Running OCR", "file", r.File)
+	g.Debug("Running OCR", "file", r.File, "languages", r.Languages)
 	f, err := os.Open(r.File)
 	if err != nil {
 		return fmt.Errorf("os.Open(%s): %w", r.File, err)
 	}
 	defer f.Close()
 
-	return g.client.OCR(g.ctx, os.Stdout, f)
+	params := client.OCRParams{
+		Languages: r.Languages,
+	}
+	return g.client.OCR(g.ctx, os.Stdout, f, params)
 }
 
 type CLI struct {
-	Verbose bool `help:"Enable verbose mode."`
+	Verbose bool   `help:"Enable verbose mode."`
+	Host    string `optional:"" short:"H" env:"KMD_HOST" help:"Server host, defaults to $XDG_RUNTIME_DIR/kmd.sock or to KMD_HOST environment variable."`
 
-	Info InfoCmd `cmd:"" help:"show the server information"`
+	Info InfoCmd `cmd:"" default:"1" help:"show the server information"`
 	OCR  OCRCmd  `cmd:"" help:"extract the text from the input image or pdf file"`
 }
 
@@ -61,14 +68,13 @@ func maine() error {
 	if cli.Verbose {
 		slog.SetLogLoggerLevel(slog.LevelDebug)
 	}
+	if cli.Host == "" {
+		cli.Host = kos.DefaultSocketPath()
+	}
 
-	// TODO: KMD_HOST support with kong
-	// TODO: --host/-H docker-like support
-	path := kos.DefaultSocketPath()
-
-	client, err := client.NewUnix(path)
+	client, err := client.NewUnix(string(cli.Host))
 	if err != nil {
-		return fmt.Errorf("client.NewUnix(%s): %w", path, err)
+		return fmt.Errorf("client.NewUnix(%s): %w", cli.Host, err)
 	}
 
 	return parsed.Run(&cli, Globals{

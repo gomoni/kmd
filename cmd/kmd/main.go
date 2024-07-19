@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/alecthomas/kong"
 	"github.com/coreos/go-systemd/activation"
 	kos "github.com/gomoni/kmd/internal/os"
 	"github.com/gomoni/kmd/internal/render"
@@ -18,14 +19,23 @@ const (
 	maxMemory = 32 << 20 // a limit on uploaded file size
 )
 
-func main() {
+type Globals struct {
+	host string
+}
+
+type CLI struct {
+	Host  string   `optional:"" short:"H" env:"KMD_HOST" help:"Server host, defaults to $XDG_RUNTIME_DIR/kmd.sock or to KMD_HOST environment variable."`
+	Serve ServeCmd `cmd:"" default:"1" help:"run the server"`
+}
+
+type ServeCmd struct{}
+
+func (cmd *ServeCmd) Run(g Globals) error {
 	pool, err := render.NewPool()
 	if err != nil {
 		log.Fatalf("NewPool err: %s", err)
 	}
 	defer pool.Close()
-
-	sock := kos.DefaultSocketPath()
 
 	ocr := server.NewOCR(maxMemory, pool)
 	mux := http.NewServeMux()
@@ -43,12 +53,12 @@ func main() {
 		}
 		listener = listeners[0]
 	} else {
-		l, err := net.Listen("unix", sock)
+		l, err := net.Listen("unix", g.host)
 		if err != nil {
 			log.Fatal(err)
 		}
 		listener = l
-		defer os.Remove(sock)
+		defer os.Remove(g.host)
 	}
 
 	s := &http.Server{
@@ -58,7 +68,22 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	if err := s.Serve(listener); err != nil {
-		panic(err)
+	return s.Serve(listener)
+}
+
+func maine() error {
+	var cli CLI
+	parsed := kong.Parse(&cli)
+	if cli.Host == "" {
+		cli.Host = kos.DefaultSocketPath()
+	}
+	return parsed.Run(&cli, Globals{
+		host: cli.Host,
+	})
+}
+
+func main() {
+	if err := maine(); err != nil {
+		log.Fatal(err)
 	}
 }

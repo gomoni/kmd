@@ -62,9 +62,10 @@ func TestHTTPHandler(t *testing.T) {
 					require.NoError(t, r.Close())
 				})
 
+			params := client.OCRParams{Languages: []string{"eng"}}
 			client := client.NewHTTP(server.URL).WithHTTPClient(server.Client())
 			var out bytes.Buffer
-			err = client.OCR(ctx, &out, r)
+			err = client.OCR(ctx, &out, r, params)
 			require.NoError(t, err)
 
 			require.Equal(t, "Hello, world!", out.String())

@@ -3,11 +3,13 @@ package client
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"net"
 	"net/http"
+	"strings"
 )
 
 type HTTP struct {
@@ -39,7 +41,11 @@ func (c HTTP) WithHTTPClient(client *http.Client) HTTP {
 	return ret
 }
 
-func (c HTTP) OCR(ctx context.Context, w io.Writer, r io.Reader) error {
+type OCRParams struct {
+	Languages []string
+}
+
+func (c HTTP) OCR(ctx context.Context, w io.Writer, r io.Reader, params OCRParams) error {
 	if r == nil {
 		return fmt.Errorf("input is empty")
 	}
@@ -55,30 +61,21 @@ func (c HTTP) OCR(ctx context.Context, w io.Writer, r io.Reader) error {
 	if err != nil {
 		return fmt.Errorf("read from the file: %w", err)
 	}
-	// TODO: implement the support for OCR params
-	/*
-		var errs []error
-			addError := func(err error) {
-				if err != nil {
-					errs = append(errs, err)
-				}
-			}
-				if params.Languages != nil {
-					err = mw.WriteField("languages", strings.Join(params.Languages, ","))
-					addError(err)
-				}
-				if params.Whitelist != "" {
-					err = mw.WriteField("whitelist", params.Whitelist)
-					addError(err)
-				}
-				if params.HOCR {
-					err = mw.WriteField("format", "hocr")
-					addError(err)
-				}
-		if errs != nil {
-			return fmt.Errorf("mutlipart errors: %w", errors.Join(errs...))
+
+	var errs []error
+	addError := func(err error) {
+		if err != nil {
+			errs = append(errs, err)
 		}
-	*/
+	}
+	if params.Languages != nil {
+		err = mw.WriteField("languages", strings.Join(params.Languages, ","))
+		addError(err)
+	}
+	if errs != nil {
+		return fmt.Errorf("mutlipart errors: %w", errors.Join(errs...))
+	}
+
 	mw.Close()
 
 	req, err := postPlain(ctx, c.prefix+"/ocr", &b)
