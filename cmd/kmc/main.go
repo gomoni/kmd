@@ -14,14 +14,14 @@ import (
 )
 
 type Globals struct {
-	debug bool
+	verbose bool
 
 	client client.HTTP
 	ctx    context.Context
 }
 
 func (g Globals) Debug(msg string, args ...any) {
-	if g.debug {
+	if g.verbose {
 		slog.Debug(msg, args...)
 	}
 }
@@ -49,7 +49,7 @@ func (r *OCRCmd) Run(g Globals) error {
 }
 
 type CLI struct {
-	Debug bool `help:"Enable debug mode."`
+	Verbose bool `help:"Enable verbose mode."`
 
 	Info InfoCmd `cmd:"" help:"show the server information"`
 	OCR  OCRCmd  `cmd:"" help:"extract the text from the input image or pdf file"`
@@ -58,7 +58,7 @@ type CLI struct {
 func maine() error {
 	var cli CLI
 	parsed := kong.Parse(&cli)
-	if cli.Debug {
+	if cli.Verbose {
 		slog.SetLogLoggerLevel(slog.LevelDebug)
 	}
 
@@ -72,9 +72,9 @@ func maine() error {
 	}
 
 	return parsed.Run(&cli, Globals{
-		debug:  cli.Debug,
-		client: client,
-		ctx:    context.Background(),
+		verbose: cli.Verbose,
+		client:  client,
+		ctx:     context.Background(),
 	})
 }
 
